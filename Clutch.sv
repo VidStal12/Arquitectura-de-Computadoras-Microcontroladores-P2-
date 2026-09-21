@@ -24,7 +24,7 @@ module Clutch(
 input logic clutch_accion,
 output logic clutch_resultado );
 
-assign clutch_accion = clutch_resultado; 
+assign clutch_resultado = clutch_accion; 
 
 endmodule
 

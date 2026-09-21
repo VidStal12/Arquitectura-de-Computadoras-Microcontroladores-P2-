@@ -18,60 +18,42 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-module Top_view(
-input logic clk,
-input logic rst_n,
-input logic clutch_cambio,
-input logic [1:0] palanca_de_cambio,
+`timescale 1ns / 1ps
 
-output logic [6:0] segmentos_moore,
-output logic [6:0] segmentos_mealy,
-output logic led_error );
+module top_view(
+    input  logic       clk,
+    input  logic       rst_n,
+    input  logic       clutch_cambio,
+    input  logic [1:0] palanca_de_cambio,
 
-logic clutch_activo ; 
-logic [1:0] palanca_cambios;
-logic [3:0] estados_futuros;
-logic [3:0] estados_actuales; 
-
-Clutch in_clutch(
-.clutch_accion (clutch_cambio),
-.clutch_resultado (clutch_activo)
+    output logic [6:0] segmentos_moore,
+    output logic [6:0] segmentos_mealy,
+    output logic       led_error
 );
 
-Caja_de_cambios_input in_caja(
-.palanca_accionada (palanca_de_cambio),
-.output_palanca (palanca_cambios)
-);
+    logic [3:0] estados_actuales;
+    logic [3:0] estados_futuros;
+    logic       clutch_activo;
 
-next_state_logic in_next_state(
- .posicion_de_palanca (palanca_cambios),
- .current_state (estados_actuales),
- .next_state (estados_futuros)
-);
+    // Submódulo Mealy
+    mealy in_mealy (
+        .palanca_de_cambio (palanca_de_cambio),
+        .clutch_cambio     (clutch_cambio),
+        .estado_actual     (estados_actuales),
+        .estado_siguiente  (estados_futuros),
+        .segmentos_mealy   (segmentos_mealy),
+        .led_error         (led_error),
+        .clutch_activo     (clutch_activo)
+    );
 
-registro_estados in_estados (
-.clk(clk),
-.rst_n (rst_n),
-.clutch_resultado (clutch_activo),
-.ns_in (estados_futuros),
-.ns_out (estados_actuales)
-);
-
-decoder_7_segmentos in_decoder_mealy(
-.estado (estados_futuros),
-.segmentos (segmentos_mealy)
-);
-
-decoder_7_segmentos in_decoder_moore(
-.estado (estados_actuales),
-.segmentos (segmentos_moore)
-);
-
-error_en_colocar_clutch in_error_vista (
-.palanca (palanca_de_cambio),
-.clutch_resultado (clutch_activo),
-.shift_error (led_error)
-);
-
+    // Submódulo Moore
+    moore in_moore (
+        .clk              (clk),
+        .rst_n            (rst_n),
+        .clutch_activo    (clutch_activo),
+        .estado_siguiente (estados_futuros),
+        .estado_actual    (estados_actuales),
+        .segmentos_moore  (segmentos_moore)
+    );
 
 endmodule
